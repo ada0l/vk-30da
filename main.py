@@ -1,11 +1,29 @@
 import dash
 import pandas as pd
+import requests as requests
 from dash import dcc, html
 from dateutil import parser
 
+token = "" # @param
+version = "5.131" # @param
+domain = "imct_fefu" # @param
+
+response = requests.get(
+    'https://api.vk.com/method/group.get',
+    params={
+        'access_token': token,
+        'v': version,
+        'domain': domain,
+        'fields': 'members_count'
+    }
+)
+try:
+    member_counts = response.json()["response"][0]["member_count"]
+except:
+    member_counts = None
 
 def generate_table(dataframe, max_rows=10):
-    return html.Table([
+    return html.Div([html.Table([
         html.Thead(
             html.Tr([html.Th(col) for col in dataframe.columns])
         ),
@@ -14,7 +32,10 @@ def generate_table(dataframe, max_rows=10):
                 html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
             ]) for i in range(min(len(dataframe), max_rows))
         ])
-    ])
+    ])], style={
+        "overflow-x": "scroll",
+        "width": "100%",
+    })
 
 
 # posts
@@ -52,7 +73,7 @@ app = dash.Dash(__name__)
 
 app.layout = html.Div(
     children=[
-        html.H1(children="FEFU IMCT", ),
+        html.H1(children=f"FEFU IMCT (Subs: {member_counts})", ),
         dcc.Graph(
             figure={
                 "data": [
